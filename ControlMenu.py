@@ -107,7 +107,8 @@ class Iridium(QThread):
                     result = r.fetch_row()[0]
                     if result is not prev:
                         prev = result
-                        print(result)
+                        # print(result)
+                        real_time = str(result[3])
                         time = result[3].split(':')
                         hours = int(time[0])
                         minutes = int(time[1])
@@ -118,8 +119,8 @@ class Iridium(QThread):
                         alt = float(result[2])
 
                         try:
-                            self.new_loc = [lat, lon, alt, str(time), seconds]
-                            print(self.new_loc)
+                            self.new_loc = [lat, lon, alt, real_time, seconds]
+                            # print(self.new_loc)
                         except:
                             print("Location data could not be updated")
 
@@ -224,14 +225,15 @@ class MainWindow(Ui_MainWindow):
         try:
             current_rows = self.tableWidget.rowCount()
             self.tableWidget.insertRow(current_rows)
-            self.tableWidget.setItem(current_rows, 0, coords[0])
-            self.tableWidget.setItem(current_rows, 1, coords[1])
-            self.tableWidget.setItem(current_rows, 2, coords[2])
-            self.tableWidget.setItem(current_rows, 3, coords[3])
+            self.tableWidget.setItem(current_rows, 0, QTableWidgetItem(str(coords[0])))
+            self.tableWidget.setItem(current_rows, 1, QTableWidgetItem(str(coords[1])))
+            self.tableWidget.setItem(current_rows, 2, QTableWidgetItem(str(coords[2])))
+            self.tableWidget.setItem(current_rows, 3, QTableWidgetItem(coords[3]))
         except:
             print("ERROR: The location data could not be updated")
 
         self.current = new_data
+        QApplication.processEvents()
 
 
 if __name__ == '__main__':
