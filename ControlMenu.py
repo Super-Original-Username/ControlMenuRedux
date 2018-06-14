@@ -118,18 +118,15 @@ class Iridium(QThread):
                         alt = float(result[2])
 
                         try:
-                            # self.new_loc = [lat, lon, alt, str(time), seconds]
-                            self.new_loc = [1,1,1,"",1]
+                            self.new_loc = [lat, lon, alt, str(time), seconds]
                             print(self.new_loc)
                         except:
                             print("Location data could not be updated")
 
                         try:
-                            self.new_coords.connect(self.main_window.update_table)
                             try:
                                 if self.new_loc is not '':
                                     self.new_coords.emit(self.new_loc)
-                                    # QApplication.processEvents()
                             except Exception as e:
                                 print(e)
                         except Exception as e:
@@ -175,8 +172,11 @@ class MainWindow(Ui_MainWindow):
         self.cdBtn.clicked.connect(self.attempt_cutdown)
         self.cdBtn.setEnabled(False)
         self.openBtn.clicked.connect(self.open_valve)
+        self.openBtn.setEnabled(False)
         self.closeBtn.clicked.connect(self.close_valve)
+        self.closeBtn.setEnabled(False)
         self.idleBtn.clicked.connect(self.send_idle)
+        self.idleBtn.setEnabled(False)
         self.trackBtn.clicked.connect(self.start_tracking)
 
         self.IMEI = ''
@@ -198,18 +198,19 @@ class MainWindow(Ui_MainWindow):
         print("sending idle command")
 
     def start_tracking(self):
+        self.trackBtn.setEnabled(False)
+        self.openBtn.setEnabled(True)
+        self.closeBtn.setEnabled(True)
+        self.cdBtn.setEnabled(True)
+        self.idleBtn.setEnabled(True)
         self.IMEI = self.IMEIBox.text()
         self.iridium_tracker = Iridium(self.db_host, self.db_user, self.db_passwd, self.db_name, self.IMEI)
         self.iridium_tracker.moveToThread(self.iridium_thread)
         self.iridium_thread.started.connect(self.iridium_tracker.run)
-        self.iridium_tracker.new_coords.connect(self.update_tab)
+        self.iridium_tracker.new_coords.connect(self.update_table)
         self.iridium_thread.start()
 
-    def update_tab(self, lst):
-        for item in lst:
-            print(item)
-
-    '''def update_table(self, coords):
+    def update_table(self, coords):
         new_data = Updater(coords[0], coords[1], coords[2], coords[3], coords[4])
         if new_data.get_lat() == 0.0 or new_data.get_lon() == 0.0 or new_data.get_alt() == 0.0:
             return
@@ -217,17 +218,20 @@ class MainWindow(Ui_MainWindow):
         if new_data.get_seconds() < self.current.get_seconds():
             return
 
+        for item in coords:
+            print(item)
+
         try:
             current_rows = self.tableWidget.rowCount()
             self.tableWidget.insertRow(current_rows)
-            self.tableWidget.setItem(current_rows, 0, new_data.get_lat)
-            self.tableWidget.setItem(current_rows, 1, new_data.get_lon)
-            self.tableWidget.setItem(current_rows, 2, new_data.get_alt)
-            self.tableWidget.setItem(current_rows, 3, new_data.get_time)
+            self.tableWidget.setItem(current_rows, 0, coords[0])
+            self.tableWidget.setItem(current_rows, 1, coords[1])
+            self.tableWidget.setItem(current_rows, 2, coords[2])
+            self.tableWidget.setItem(current_rows, 3, coords[3])
         except:
             print("ERROR: The location data could not be updated")
 
-        self.current = new_data'''
+        self.current = new_data
 
 
 if __name__ == '__main__':
