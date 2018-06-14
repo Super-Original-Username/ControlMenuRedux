@@ -58,10 +58,9 @@ class Unbuffered:
         self.stream.close
 
 
-class Iridium(QObject):
+class Iridium(QThread):
     new_coords = pyqtSignal(list)
     no_iridium = pyqtSignal()
-    new_coords
 
     def __init__(self, host, user, passwd, name, IMEI):
         super(Iridium, self).__init__()
@@ -73,6 +72,9 @@ class Iridium(QObject):
         self.passwd = passwd
         self.name = name
         self.IMEI = IMEI
+
+    def __del__(self):
+        self.wait()
 
     def run(self):
         self.new_loc = ''
@@ -116,7 +118,8 @@ class Iridium(QObject):
                         alt = float(result[2])
 
                         try:
-                            self.new_loc = [lat, lon, alt, str(time), seconds]
+                            # self.new_loc = [lat, lon, alt, str(time), seconds]
+                            self.new_loc = [1,1,1,"",1]
                             print(self.new_loc)
                         except:
                             print("Location data could not be updated")
@@ -125,9 +128,8 @@ class Iridium(QObject):
                             self.new_coords.connect(self.main_window.update_table)
                             try:
                                 if self.new_loc is not '':
-                                    # self.new_coords.emit(self.new_loc)
+                                    self.new_coords.emit(self.new_loc)
                                     # QApplication.processEvents()
-                                    self.new_coords.emit([1, 1, 1, "1", 1])
                             except Exception as e:
                                 print(e)
                         except Exception as e:
@@ -200,11 +202,15 @@ class MainWindow(Ui_MainWindow):
         self.iridium_tracker = Iridium(self.db_host, self.db_user, self.db_passwd, self.db_name, self.IMEI)
         self.iridium_tracker.moveToThread(self.iridium_thread)
         self.iridium_thread.started.connect(self.iridium_tracker.run)
-        self.iridium_tracker.new_coords.connect(self.update_table)
+        self.iridium_tracker.new_coords.connect(self.update_tab)
         self.iridium_thread.start()
 
-    def update_table(self, coords):
-        '''new_data = Updater(coords[0], coords[1], coords[2], coords[3], coords[4])
+    def update_tab(self, lst):
+        for item in lst:
+            print(item)
+
+    '''def update_table(self, coords):
+        new_data = Updater(coords[0], coords[1], coords[2], coords[3], coords[4])
         if new_data.get_lat() == 0.0 or new_data.get_lon() == 0.0 or new_data.get_alt() == 0.0:
             return
 
