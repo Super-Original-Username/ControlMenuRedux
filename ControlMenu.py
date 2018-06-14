@@ -74,8 +74,8 @@ class Iridium(QObject):
         self.name = name
         self.IMEI = IMEI
 
-    def fetch_from_db(self):
-        global new_loc
+    def run(self):
+        self.new_loc = ''
         prev = ''
         connected = False
         attempts = 0
@@ -100,6 +100,7 @@ class Iridium(QObject):
                 self.main_window.no_iridium.emit()
             while connected:
                 try:
+                    self.new_loc = ''
                     r = db.store_result()
                     result = r.fetch_row()[0]
                     if result is not prev:
@@ -115,15 +116,18 @@ class Iridium(QObject):
                         alt = float(result[2])
 
                         try:
-                            new_loc = [lat, lon, alt, str(time), seconds]
-                            print(new_loc)
+                            self.new_loc = [lat, lon, alt, str(time), seconds]
+                            print(self.new_loc)
                         except:
                             print("Location data could not be updated")
 
                         try:
                             self.new_coords.connect(self.main_window.update_table)
                             try:
-                                self.new_coords.emit(new_loc)
+                                if self.new_loc is not '':
+                                    # self.new_coords.emit(self.new_loc)
+                                    # QApplication.processEvents()
+                                    self.new_coords.emit([1, 1, 1, "1", 1])
                             except Exception as e:
                                 print(e)
                         except Exception as e:
@@ -150,6 +154,7 @@ class MainWindow(Ui_MainWindow):
 
     def __init__(self, dialog):
         super(MainWindow, self).__init__()
+
         self.setupUi(dialog)
 
         self.db_host = 'eclipse.rci.montana.edu'
@@ -160,10 +165,10 @@ class MainWindow(Ui_MainWindow):
         self.cmd_emailer = Emailer()
         self.cmd_thread = QThread()
         self.cmd_emailer.moveToThread(self.cmd_thread)
-        # self.iridium_thread = QThread()
+        self.iridium_thread = QThread()
+        self.iridium_tracker = ''
 
         self.cmd_thread.start()
-        # self.iridium_thread.start()
 
         self.cdBtn.clicked.connect(self.attempt_cutdown)
         self.cdBtn.setEnabled(False)
@@ -192,11 +197,14 @@ class MainWindow(Ui_MainWindow):
 
     def start_tracking(self):
         self.IMEI = self.IMEIBox.text()
-        iridium_tracker = Iridium(self.db_host, self.db_user, self.db_passwd, self.db_name, self.IMEI)
-        # iridium_tracker.new_coords.connect(self.update_table)
+        self.iridium_tracker = Iridium(self.db_host, self.db_user, self.db_passwd, self.db_name, self.IMEI)
+        self.iridium_tracker.moveToThread(self.iridium_thread)
+        self.iridium_thread.started.connect(self.iridium_tracker.run)
+        self.iridium_tracker.new_coords.connect(self.update_table)
+        self.iridium_thread.start()
 
     def update_table(self, coords):
-        new_data = Updater(coords[0], coords[1], coords[2], coords[3], coords[4])
+        '''new_data = Updater(coords[0], coords[1], coords[2], coords[3], coords[4])
         if new_data.get_lat() == 0.0 or new_data.get_lon() == 0.0 or new_data.get_alt() == 0.0:
             return
 
@@ -213,7 +221,7 @@ class MainWindow(Ui_MainWindow):
         except:
             print("ERROR: The location data could not be updated")
 
-        self.current = new_data
+        self.current = new_data'''
 
 
 if __name__ == '__main__':
@@ -225,10 +233,12 @@ if __name__ == '__main__':
 
     sys._excepthook = sys.excepthook
 
+
     def exception_hook(exctype, value, traceback):
         print(exctype, value, traceback)
         sys._excepthook(exctype, value, traceback)
         sys.exit(1)
+
 
     sys.excepthook = exception_hook
     app.exec_()
