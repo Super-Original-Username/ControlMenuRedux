@@ -4,8 +4,6 @@ import os
 import datetime
 
 # PyQt imports
-import PyQt5
-from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -13,7 +11,52 @@ from PyQt5.QtWidgets import *
 import math
 import MySQLdb
 
+# Email imports
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
+import smtplib
+
 from trckGUI import Ui_MainWindow
+
+
+class Emailer(QThread):
+
+    def __init__(self, from_addr, to_addr, passwd, cmd):
+        super(Emailer, self).__init__()
+        self.from_addr = from_addr
+        self.to_addr = to_addr
+        self.passwd = passwd
+        self.cmd = cmd
+
+        # self.server.login(str(to_addr), str(passwd))
+        self.server = smtplib.SMTP('smtp.gmail.com', 587)
+
+    def __del__(self):
+        self.quit()
+        self.wait()
+
+    def run(self):
+        msg = MIMEMultipart()
+        msg['From'] = "msgc.borealis@gmail.com"
+        msg['To'] = "ethanfison@gmail.com"
+        msg['Subject'] = "Python Email Test"
+        part = MIMEBase('application', "octet-stream")
+        body = "test mail"
+        msg.attach(MIMEText(body, 'plain'))
+
+        self.server.ehlo()
+        self.server.starttls()
+        self.server.ehlo()
+        self.server.login('msgc.borealis', 'FlyHighN0w')
+        text = msg.as_string()
+        self.server.sendmail('msgc.borealis@gmail.com', 'ethanfison@gmail.com', text)
+
+        if self.cmd == 'cutdown':
+            print(self.cmd)
+
+        self.__del__()
 
 
 class Updater(QObject):
@@ -74,6 +117,8 @@ class Iridium(QThread):
         self.IMEI = IMEI
 
     def __del__(self):
+        print("Killing thread")
+        self.interrupt()
         self.wait()
 
     def run(self):
@@ -85,27 +130,27 @@ class Iridium(QThread):
             if attempts < 20:
                 try:
                     db = MySQLdb.connect(host=self.host, user=self.user, passwd=self.passwd, db=self.name)
-                    cmd = 'select gps_lat, gps_long, gps_alt, gps_time from gps where gps_IMEI = %s order by pri_key DESC LIMIT 1' % self.IMEI
-                    db.query(cmd)
+                    self.cmd = 'select gps_lat, gps_long, gps_alt, gps_time from gps where gps_IMEI = %s order by pri_key DESC LIMIT 1' % self.IMEI
                     connected = True
 
                     if self.iridium_interrupt:
                         db.close()
                         connected = False
                 except:
-                    print("Failed ot connect, trying again in 1 second")
+                    print("Failed to connect, trying again in 1 second")
                     attempts += 1
                     self.sleep(1)
             else:
                 print("Too many attempts, quitting")
                 self.interrupt()
                 self.main_window.no_iridium.emit()
-            while connected:
+            while connected and not self.iridium_interrupt:
                 try:
                     self.new_loc = ''
+                    db.query(self.cmd)
                     r = db.store_result()
                     result = r.fetch_row()[0]
-                    if result is not prev:
+                    if result != prev:
                         prev = result
                         # print(result)
                         real_time = str(result[3])
@@ -125,29 +170,24 @@ class Iridium(QThread):
                             print("Location data could not be updated")
 
                         try:
-                            try:
-                                if self.new_loc is not '':
-                                    self.new_coords.emit(self.new_loc)
-                            except Exception as e:
-                                print(e)
+                            if self.new_loc is not '':
+                                self.new_coords.emit(self.new_loc)
                         except Exception as e:
                             print(e)
-                except:
-                    print("ERROR: could not find any data. Please check the IMEI for your modem")
-                self.sleep(2)
+                    else:
+                        raise Exception("ERROR: data is same as last fetch or IMEI is incorrect")
+                except Exception as e:
+                    print(e)
+                self.sleep(10)
         try:
             db.close()
+            self.connected = False
         except Exception as e:
             print(e)
         pass
 
     def interrupt(self):
         self.iridium_interrupt = True
-
-
-class Emailer(QThread):
-    def __init__(self):
-        super(Emailer, self).__init__()
 
 
 class MainWindow(Ui_MainWindow):
@@ -162,13 +202,7 @@ class MainWindow(Ui_MainWindow):
         self.db_passwd = 'tracker'
         self.db_name = 'freemanproject'
 
-        self.cmd_emailer = Emailer()
-        self.cmd_thread = QThread()
-        self.cmd_emailer.moveToThread(self.cmd_thread)
-        self.iridium_thread = QThread()
-        self.iridium_tracker = ''
-
-        self.cmd_thread.start()
+        # self.cmd_thread.start()
 
         self.cdBtn.clicked.connect(self.attempt_cutdown)
         self.cdBtn.setEnabled(False)
@@ -179,6 +213,7 @@ class MainWindow(Ui_MainWindow):
         self.idleBtn.clicked.connect(self.send_idle)
         self.idleBtn.setEnabled(False)
         self.trackBtn.clicked.connect(self.start_tracking)
+        self.stopBtn.setEnabled(False)
 
         self.IMEI = ''
         self.email = ''
@@ -190,6 +225,9 @@ class MainWindow(Ui_MainWindow):
         print("closing valve")
 
     def attempt_cutdown(self):
+        e_thread = Emailer('msgc.borealis@gmail.com', 'ethanfison@gmail.com', 'FlyHighN0w','cutdown')
+        e_thread.start()
+
         print("attempting cutdown")
 
     def open_valve(self):
@@ -199,17 +237,26 @@ class MainWindow(Ui_MainWindow):
         print("sending idle command")
 
     def start_tracking(self):
+        self.tableWidget.clear()
+        self.tableWidget.setRowCount(0)
         self.trackBtn.setEnabled(False)
         self.openBtn.setEnabled(True)
         self.closeBtn.setEnabled(True)
         self.cdBtn.setEnabled(True)
         self.idleBtn.setEnabled(True)
+        self.stopBtn.setEnabled(True)
         self.IMEI = self.IMEIBox.text()
         self.iridium_tracker = Iridium(self.db_host, self.db_user, self.db_passwd, self.db_name, self.IMEI)
-        self.iridium_tracker.moveToThread(self.iridium_thread)
-        self.iridium_thread.started.connect(self.iridium_tracker.run)
+        # self.iridium_tracker.moveToThread(self.iridium_thread)
+        # self.iridium_thread.started.connect(self.iridium_tracker.run)
         self.iridium_tracker.new_coords.connect(self.update_table)
-        self.iridium_thread.start()
+        self.stopBtn.clicked.connect(self.stop_tracking)
+        self.iridium_tracker.start()
+
+    def stop_tracking(self):
+        self.trackBtn.setEnabled(True)
+        self.stopBtn.setEnabled(False)
+        self.iridium_tracker.__del__()
 
     def update_table(self, coords):
         new_data = Updater(coords[0], coords[1], coords[2], coords[3], coords[4])
