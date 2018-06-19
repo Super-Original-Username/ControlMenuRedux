@@ -108,6 +108,8 @@ class Iridium(QThread):
     def __init__(self, host, user, passwd, name, IMEI):
         super(Iridium, self).__init__()
         # self.moveToThread(self.main_window.iridium_thread)
+        self.c = ''
+        self.db = ''
         self.iridium_interrupt = False
         self.main_window = MainWindow
         self.host = host
@@ -129,12 +131,13 @@ class Iridium(QThread):
         while not connected and not self.iridium_interrupt:
             if attempts < 20:
                 try:
-                    db = MySQLdb.connect(host=self.host, user=self.user, passwd=self.passwd, db=self.name)
+                    self.db = MySQLdb.connect(host=self.host, user=self.user, passwd=self.passwd, db=self.name)
                     self.cmd = 'select gps_lat, gps_long, gps_alt, gps_time from gps where gps_IMEI = %s order by pri_key DESC LIMIT 1' % self.IMEI
                     connected = True
 
                     if self.iridium_interrupt:
-                        db.close()
+                        self.db.close()
+                        self.c.close()
                         connected = False
                 except:
                     print("Failed to connect, trying again in 1 second")
@@ -147,9 +150,16 @@ class Iridium(QThread):
             while connected and not self.iridium_interrupt:
                 try:
                     self.new_loc = ''
-                    db.query(self.cmd)
-                    r = db.store_result()
-                    result = r.fetch_row()[0]
+                    self.db.close()
+                    self.db =  MySQLdb.connect(host=self.host, user=self.user, passwd=self.passwd, db=self.name)
+                    self.c = self.db.cursor()
+                    try:
+                        self.c.execute('select gps_lat, gps_long, gps_alt, gps_time from gps where gps_IMEI = 300234064806810 order by pri_key DESC LIMIT 1')
+                        result = self.c.fetchone()
+                    except Exception as e:
+                        print(e)
+                    # r = db.store_result()
+                    # result = r.fetch_row()[0]
                     if result != prev:
                         prev = result
                         # print(result)
@@ -179,8 +189,11 @@ class Iridium(QThread):
                 except Exception as e:
                     print(e)
                 self.sleep(10)
+                self.c.close()
+                # self.db.close()
         try:
-            db.close()
+            self.c.close()
+            self.db.close()
             self.connected = False
         except Exception as e:
             print(e)
