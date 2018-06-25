@@ -132,7 +132,9 @@ class Iridium(QThread):
             if attempts < 20:
                 try:
                     self.db = MySQLdb.connect(host=self.host, user=self.user, passwd=self.passwd, db=self.name)
+                    self.db.autocommit(True)
                     self.cmd = 'select gps_lat, gps_long, gps_alt, gps_time from gps where gps_IMEI = %s order by pri_key DESC LIMIT 1' % self.IMEI
+                    self.c = self.db.cursor()
                     connected = True
 
                     if self.iridium_interrupt:
@@ -150,9 +152,6 @@ class Iridium(QThread):
             while connected and not self.iridium_interrupt:
                 try:
                     self.new_loc = ''
-                    self.db.close()
-                    self.db =  MySQLdb.connect(host=self.host, user=self.user, passwd=self.passwd, db=self.name)
-                    self.c = self.db.cursor()
                     try:
                         self.c.execute('select gps_lat, gps_long, gps_alt, gps_time from gps where gps_IMEI = 300234064806810 order by pri_key DESC LIMIT 1')
                         result = self.c.fetchone()
@@ -189,7 +188,7 @@ class Iridium(QThread):
                 except Exception as e:
                     print(e)
                 self.sleep(10)
-                self.c.close()
+                # self.c.close()
                 # self.db.close()
         try:
             self.c.close()
