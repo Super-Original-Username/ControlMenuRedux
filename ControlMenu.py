@@ -23,12 +23,13 @@ from trckGUI import Ui_MainWindow
 
 class Emailer(QThread):
 
-    def __init__(self, from_addr, to_addr, passwd, cmd):
+    def __init__(self, from_addr, to_addr, passwd, cmd, IMEI):
         super(Emailer, self).__init__()
         self.from_addr = from_addr
         self.to_addr = to_addr
         self.passwd = passwd
         self.cmd = cmd
+        self.IMEI = IMEI
 
         # self.server.login(str(to_addr), str(passwd))
         self.server = smtplib.SMTP('smtp.gmail.com', 587)
@@ -38,13 +39,27 @@ class Emailer(QThread):
         self.wait()
 
     def run(self):
+        if self.cmd == 'cutdown':
+            cmd_file = 'commands/cutdown_cmd.sbd'
+        elif self.cmd == 'open':
+            cmd_file = 'commands/open_cmd.sbd'
+        elif self.cmd == 'close':
+            cmd_file = 'commands/close_cmd.sbd'
+
+        command = str(cmd_file)
+
         msg = MIMEMultipart()
         msg['From'] = "msgc.borealis@gmail.com"
-        msg['To'] = "ethanfison@gmail.com"
-        msg['Subject'] = "Python Email Test"
+        msg['To'] = "ethanfison@mgail.com"
+        # msg['To'] = "data@sbd.iridium.com"
+        msg['Subject'] = self.IMEI
         part = MIMEBase('application', "octet-stream")
-        body = "test mail"
+        part.set_payload(open(command, "rb").read())
+        encoders.encode_base64(part)
+        part.add_header('Content-Dispostion', 'attachment; filename=%s' % command)
+        body = ""
         msg.attach(MIMEText(body, 'plain'))
+        msg.attach(part)
 
         self.server.ehlo()
         self.server.starttls()
@@ -119,8 +134,9 @@ class Iridium(QThread):
         self.IMEI = IMEI
 
     def __del__(self):
-        print("Killing thread")
+        print("Killing tracker")
         self.interrupt()
+        self.quit()
         self.wait()
 
     def run(self):
@@ -153,7 +169,8 @@ class Iridium(QThread):
                 try:
                     self.new_loc = ''
                     try:
-                        self.c.execute('select gps_lat, gps_long, gps_alt, gps_time from gps where gps_IMEI = 300234064806810 order by pri_key DESC LIMIT 1')
+                        self.c.execute(
+                            'select gps_lat, gps_long, gps_alt, gps_time from gps where gps_IMEI = 300234064806810 order by pri_key DESC LIMIT 1')
                         result = self.c.fetchone()
                     except Exception as e:
                         print(e)
@@ -187,7 +204,8 @@ class Iridium(QThread):
                         raise Exception("ERROR: data is same as last fetch or IMEI is incorrect")
                 except Exception as e:
                     print(e)
-                self.sleep(10)
+                if not self.iridium_interrupt:
+                    self.sleep(10)
                 # self.c.close()
                 # self.db.close()
         try:
@@ -234,18 +252,28 @@ class MainWindow(Ui_MainWindow):
         self.current = Updater(0, 0, 0, '', 0)
 
     def close_valve(self):
+        e_thread = Emailer('msgc.borealis@gmail.com', 'data@sbd.iridium.com', 'FlyHighN0w', 'close',
+                           self.IMEI)
+        e_thread.start()
         print("closing valve")
 
     def attempt_cutdown(self):
-        e_thread = Emailer('msgc.borealis@gmail.com', 'ethanfison@gmail.com', 'FlyHighN0w','cutdown')
+        e_thread = Emailer('msgc.borealis@gmail.com', 'data@sbd.iridium.com', 'FlyHighN0w', 'cutdown',
+                           self.IMEI)
         e_thread.start()
 
         print("attempting cutdown")
 
     def open_valve(self):
+        e_thread = Emailer('msgc.borealis@gmail.com', 'data@sbd.iridium.com', 'FlyHighN0w', 'open',
+                           self.IMEI)
+        e_thread.start()
         print("opening valve")
 
     def send_idle(self):
+        e_thread = Emailer('msgc.borealis@gmail.com', 'data@sbd.iridium.com', 'FlyHighN0w', 'cutdown',
+                           self.IMEI)
+        e_thread.start()
         print("sending idle command")
 
     def start_tracking(self):
