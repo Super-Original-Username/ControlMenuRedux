@@ -67,7 +67,7 @@ class Emailer(QThread):
         self.server.login('msgc.borealis', 'FlyHighN0w')
         text = msg.as_string()
         self.server.sendmail('msgc.borealis@gmail.com', 'ethanfison@gmail.com', text)
-
+        #comment
         if self.cmd == 'cutdown':
             print(self.cmd)
 
