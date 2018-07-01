@@ -50,7 +50,7 @@ class Emailer(QThread):
 
         msg = MIMEMultipart()
         msg['From'] = "msgc.borealis@gmail.com"
-        msg['To'] = "ethanfison@mgail.com"
+        msg['To'] = "data@sbd.iridium.com"
         # msg['To'] = "data@sbd.iridium.com"
         msg['Subject'] = self.IMEI
         part = MIMEBase('application', "octet-stream")
@@ -66,7 +66,7 @@ class Emailer(QThread):
         self.server.ehlo()
         self.server.login('msgc.borealis', 'FlyHighN0w')
         text = msg.as_string()
-        self.server.sendmail('msgc.borealis@gmail.com', 'ethanfison@gmail.com', text)
+        self.server.sendmail('msgc.borealis@gmail.com', 'data@sbd.iridium.com', text)
         #comment
         if self.cmd == 'cutdown':
             print(self.cmd)
