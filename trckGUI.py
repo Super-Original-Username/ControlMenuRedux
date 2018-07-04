@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'trckgui.ui'
+# Form implementation generated from reading ui file 'trckGUI.ui'
 #
 # Created by: PyQt5 UI code generator 5.10.1
 #
@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1550, 932)
+        MainWindow.resize(702, 466)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
@@ -31,24 +31,24 @@ class Ui_MainWindow(object):
         self.tableWidget.setHorizontalHeaderItem(2, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(3, item)
-        self.widget = QtWidgets.QWidget(self.splitter)
-        self.widget.setObjectName("widget")
-        self.verticalLayout = QtWidgets.QVBoxLayout(self.widget)
+        self.layoutWidget = QtWidgets.QWidget(self.splitter)
+        self.layoutWidget.setObjectName("layoutWidget")
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.layoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.cdBtn = QtWidgets.QPushButton(self.widget)
+        self.cdBtn = QtWidgets.QPushButton(self.layoutWidget)
         self.cdBtn.setObjectName("cdBtn")
         self.verticalLayout.addWidget(self.cdBtn)
-        self.openBtn = QtWidgets.QPushButton(self.widget)
+        self.openBtn = QtWidgets.QPushButton(self.layoutWidget)
         self.openBtn.setObjectName("openBtn")
         self.verticalLayout.addWidget(self.openBtn)
-        self.closeBtn = QtWidgets.QPushButton(self.widget)
+        self.closeBtn = QtWidgets.QPushButton(self.layoutWidget)
         self.closeBtn.setObjectName("closeBtn")
         self.verticalLayout.addWidget(self.closeBtn)
-        self.idleBtn = QtWidgets.QPushButton(self.widget)
+        self.idleBtn = QtWidgets.QPushButton(self.layoutWidget)
         self.idleBtn.setObjectName("idleBtn")
         self.verticalLayout.addWidget(self.idleBtn)
-        self.IMEIBox = QtWidgets.QLineEdit(self.widget)
+        self.IMEIBox = QtWidgets.QLineEdit(self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -56,7 +56,7 @@ class Ui_MainWindow(object):
         self.IMEIBox.setSizePolicy(sizePolicy)
         self.IMEIBox.setObjectName("IMEIBox")
         self.verticalLayout.addWidget(self.IMEIBox)
-        self.trackBtn = QtWidgets.QPushButton(self.widget)
+        self.trackBtn = QtWidgets.QPushButton(self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -64,7 +64,7 @@ class Ui_MainWindow(object):
         self.trackBtn.setSizePolicy(sizePolicy)
         self.trackBtn.setObjectName("trackBtn")
         self.verticalLayout.addWidget(self.trackBtn)
-        self.stopBtn = QtWidgets.QPushButton(self.widget)
+        self.stopBtn = QtWidgets.QPushButton(self.layoutWidget)
         self.stopBtn.setObjectName("stopBtn")
         self.verticalLayout.addWidget(self.stopBtn)
         self.gridLayout.addWidget(self.splitter, 0, 0, 1, 1)

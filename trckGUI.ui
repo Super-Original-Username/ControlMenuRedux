@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1550</width>
-    <height>932</height>
+    <width>702</width>
+    <height>466</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -42,7 +42,7 @@
         </property>
        </column>
       </widget>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
          <widget class="QPushButton" name="cdBtn">
