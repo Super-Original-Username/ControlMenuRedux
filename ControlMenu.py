@@ -2,7 +2,6 @@
 import sys
 import os
 import datetime
-import time
 
 # PyQt imports
 from PyQt5.QtCore import *
@@ -248,9 +247,6 @@ class MainWindow(Ui_MainWindow):
         self.IMEI = ''
         self.email = ''
         self.e_pass = ''
-        self.error_dialog = QErrorMessage()
-        self.error_dialog.setWindowTitle("ERROR")
-        self.error_dialog.setModal(True)
 
         self.current = Updater(0, 0, 0, '', 0)
 
@@ -280,27 +276,21 @@ class MainWindow(Ui_MainWindow):
         print("sending idle command")
 
     def start_tracking(self):
+        self.tableWidget.clear()
+        self.tableWidget.setRowCount(0)
+        self.trackBtn.setEnabled(False)
+        self.openBtn.setEnabled(True)
+        self.closeBtn.setEnabled(True)
+        self.cdBtn.setEnabled(True)
+        self.idleBtn.setEnabled(True)
+        self.stopBtn.setEnabled(True)
         self.IMEI = self.IMEIBox.text()
-
-        if self.IMEI == '':
-            # time.sleep(0)
-            self.error_dialog.showMessage("Please enter an IMEI before starting the tracker")
-            # self.error_dialog.show()
-        else:
-            self.tableWidget.clear()
-            self.tableWidget.setRowCount(0)
-            self.trackBtn.setEnabled(False)
-            self.openBtn.setEnabled(True)
-            self.closeBtn.setEnabled(True)
-            self.cdBtn.setEnabled(True)
-            self.idleBtn.setEnabled(True)
-            self.stopBtn.setEnabled(True)
-            self.iridium_tracker = Iridium(self.db_host, self.db_user, self.db_passwd, self.db_name, self.IMEI)
-            # self.iridium_tracker.moveToThread(self.iridium_thread)
-            # self.iridium_thread.started.connect(self.iridium_tracker.run)
-            self.iridium_tracker.new_coords.connect(self.update_table)
-            self.stopBtn.clicked.connect(self.stop_tracking)
-            self.iridium_tracker.start()
+        self.iridium_tracker = Iridium(self.db_host, self.db_user, self.db_passwd, self.db_name, self.IMEI)
+        # self.iridium_tracker.moveToThread(self.iridium_thread)
+        # self.iridium_thread.started.connect(self.iridium_tracker.run)
+        self.iridium_tracker.new_coords.connect(self.update_table)
+        self.stopBtn.clicked.connect(self.stop_tracking)
+        self.iridium_tracker.start()
 
     def stop_tracking(self):
         self.trackBtn.setEnabled(True)
