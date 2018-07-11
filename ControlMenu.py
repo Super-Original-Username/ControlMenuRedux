@@ -201,6 +201,8 @@ class Iridium(QThread):
                             print(e)
                     else:
                         raise Exception("ERROR: data is same as last fetch or IMEI is incorrect")
+                        self.c.close()
+                        self.c = self.db.cursor()
                 except Exception as e:
                     print(e)
                 if not self.iridium_interrupt:
