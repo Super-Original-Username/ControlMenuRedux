@@ -124,6 +124,7 @@ class Iridium(QThread):
         # self.moveToThread(self.main_window.iridium_thread)
         self.c = ''
         self.db = ''
+        self.cmd = ''
         self.iridium_interrupt = False
         self.main_window = MainWindow
         self.host = host
@@ -168,8 +169,7 @@ class Iridium(QThread):
                 try:
                     self.new_loc = ''
                     try:
-                        self.c.execute(
-                            'select gps_lat, gps_long, gps_alt, gps_time from gps where gps_IMEI = 300234064806810 order by pri_key DESC LIMIT 1')
+                        self.c.execute(self.cmd)
                         result = self.c.fetchone()
                     except Exception as e:
                         print(e)
@@ -201,8 +201,8 @@ class Iridium(QThread):
                             print(e)
                     else:
                         raise Exception("ERROR: data is same as last fetch or IMEI is incorrect")
-                        self.c.close()
-                        self.c = self.db.cursor()
+                        # self.c.close()
+                        # self.c = self.db.cursor()
                 except Exception as e:
                     print(e)
                 if not self.iridium_interrupt:
@@ -295,8 +295,8 @@ class MainWindow(Ui_MainWindow):
             self.stopBtn.setEnabled(True)
             self.IMEI = self.IMEIBox.text()
             self.iridium_tracker = Iridium(self.db_host, self.db_user, self.db_passwd, self.db_name, self.IMEI)
-        # self.iridium_tracker.moveToThread(self.iridium_thread)
-        # self.iridium_thread.started.connect(self.iridium_tracker.run)
+            # self.iridium_tracker.moveToThread(self.iridium_thread)
+            # self.iridium_thread.started.connect(self.iridium_tracker.run)
             self.iridium_tracker.new_coords.connect(self.update_table)
             self.stopBtn.clicked.connect(self.stop_tracking)
             self.iridium_tracker.start()
