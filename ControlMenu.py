@@ -99,7 +99,7 @@ class Updater(QObject):
 
 
 class Unbuffered:
-    """Eliminates the serial buffer"""
+    """Eliminates the buffer for streams fed into an instance of the class"""
 
     def __init__(self, stream):
         self.stream = stream
