@@ -1,7 +1,7 @@
 # Imports
 import sys
 import os
-import datetime
+import time
 
 # PyQt imports
 from PyQt5.QtCore import *
@@ -56,7 +56,8 @@ class Emailer(QThread):
         part = MIMEBase('application', "octet-stream")
         part.set_payload(open(command, "rb").read())
         encoders.encode_base64(part)
-        part.add_header('Content-Dispostion', 'attachment; filename=%s' % command)
+        part.add_header('Content-Dispostion',
+                        'attachment; filename=%s' % command)
         body = ""
         msg.attach(MIMEText(body, 'plain'))
         msg.attach(part)
@@ -66,7 +67,8 @@ class Emailer(QThread):
         self.server.ehlo()
         self.server.login('msgc.borealis', 'FlyHighN0w')
         text = msg.as_string()
-        self.server.sendmail('msgc.borealis@gmail.com', 'data@sbd.iridium.com', text)
+        self.server.sendmail('msgc.borealis@gmail.com',
+                             'data@sbd.iridium.com', text)
         if self.cmd == 'cutdown':
             print(self.cmd)
 
@@ -147,7 +149,8 @@ class Iridium(QThread):
         while not connected and not self.iridium_interrupt:
             if attempts < 20:
                 try:
-                    self.db = MySQLdb.connect(host=self.host, user=self.user, passwd=self.passwd, db=self.name)
+                    self.db = MySQLdb.connect(
+                        host=self.host, user=self.user, passwd=self.passwd, db=self.name)
                     self.db.autocommit(True)
                     self.cmd = 'select gps_lat, gps_long, gps_alt, gps_time from gps where gps_IMEI = %s order by pri_key DESC LIMIT 1' % self.IMEI
                     self.c = self.db.cursor()
@@ -200,7 +203,8 @@ class Iridium(QThread):
                         except Exception as e:
                             print(e)
                     else:
-                        raise Exception("ERROR: data is same as last fetch or IMEI is incorrect")
+                        raise Exception(
+                            "ERROR: data is same as last fetch or IMEI is incorrect")
                         # self.c.close()
                         # self.c = self.db.cursor()
                 except Exception as e:
@@ -249,6 +253,10 @@ class MainWindow(Ui_MainWindow):
         self.error = QErrorMessage()
         self.error.setWindowTitle("ERROR - Missing Data")
 
+        self.timestr = ''
+        self.log_iter = 0
+        self.logfile = ''
+
         self.IMEI = ''
         self.email = ''
         self.e_pass = ''
@@ -282,9 +290,19 @@ class MainWindow(Ui_MainWindow):
 
     def start_tracking(self):
         if self.IMEIBox.text() == '':
-            self.error.showMessage('Please enter an IMEI before starting the tracker')
+            self.error.showMessage(
+                'Please enter an IMEI before starting the tracker')
             self.error.setModal(True)
         else:
+            try:
+                self.log_iter = 0
+                self.timestr = time.strftime("%Y_%m_%d")
+                while os.path.exists("tracking CSVs/%s_tracking[%s].csv" % (self.timestr, self.log_iter)):
+                    self.log_iter += 1
+                self.logfile = open("tracking CSVs/%s_tracking[%s].csv" % (
+                    self.timestr, self.log_iter), "w")
+            except Exception as e:
+                print("Tracking log file could not be created")
             self.tableWidget.clear()
             self.tableWidget.setRowCount(0)
             self.trackBtn.setEnabled(False)
@@ -294,7 +312,8 @@ class MainWindow(Ui_MainWindow):
             self.idleBtn.setEnabled(True)
             self.stopBtn.setEnabled(True)
             self.IMEI = self.IMEIBox.text()
-            self.iridium_tracker = Iridium(self.db_host, self.db_user, self.db_passwd, self.db_name, self.IMEI)
+            self.iridium_tracker = Iridium(
+                self.db_host, self.db_user, self.db_passwd, self.db_name, self.IMEI)
             # self.iridium_tracker.moveToThread(self.iridium_thread)
             # self.iridium_thread.started.connect(self.iridium_tracker.run)
             self.iridium_tracker.new_coords.connect(self.update_table)
@@ -307,7 +326,8 @@ class MainWindow(Ui_MainWindow):
         self.iridium_tracker.__del__()
 
     def update_table(self, coords):
-        new_data = Updater(coords[0], coords[1], coords[2], coords[3], coords[4])
+        new_data = Updater(coords[0], coords[1],
+                           coords[2], coords[3], coords[4])
         if new_data.get_lat() == 0.0 or new_data.get_lon() == 0.0 or new_data.get_alt() == 0.0:
             return
 
@@ -320,10 +340,19 @@ class MainWindow(Ui_MainWindow):
         try:
             current_rows = self.tableWidget.rowCount()
             self.tableWidget.insertRow(current_rows)
-            self.tableWidget.setItem(current_rows, 0, QTableWidgetItem(str(coords[0])))
-            self.tableWidget.setItem(current_rows, 1, QTableWidgetItem(str(coords[1])))
-            self.tableWidget.setItem(current_rows, 2, QTableWidgetItem(str(coords[2])))
-            self.tableWidget.setItem(current_rows, 3, QTableWidgetItem(coords[3]))
+            self.tableWidget.setItem(
+                current_rows, 0, QTableWidgetItem(str(coords[0])))
+            self.tableWidget.setItem(
+                current_rows, 1, QTableWidgetItem(str(coords[1])))
+            self.tableWidget.setItem(
+                current_rows, 2, QTableWidgetItem(str(coords[2])))
+            self.tableWidget.setItem(
+                current_rows, 3, QTableWidgetItem(coords[3]))
+            print("%s,%s,%s,%s\n" %
+                               (str(coords[0]), str(coords[1]), str(coords[2]), coords[3]))
+            self.logfile.write("%s,%s,%s,%s\n" %
+                               (str(coords[0]), str(coords[1]), str(coords[2]), coords[3]))
+            self.logfile.flush()
         except:
             print("ERROR: The location data could not be updated")
 
@@ -340,12 +369,10 @@ if __name__ == '__main__':
 
     sys._excepthook = sys.excepthook
 
-
     def exception_hook(exctype, value, traceback):
         print(exctype, value, traceback)
         sys._excepthook(exctype, value, traceback)
         sys.exit(1)
-
 
     sys.excepthook = exception_hook
     app.exec_()
