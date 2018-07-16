@@ -25,14 +25,11 @@ class Emailer(QThread):
 
     def __init__(self, from_addr, to_addr, passwd, cmd, IMEI):
         super(Emailer, self).__init__()
-        self.from_addr = from_addr
-        self.to_addr = to_addr
+        self.from_addr = 'msgc.borealis@gmail.com'
+        self.to_addr = 'data@sbd.iridium.com'
         self.passwd = passwd
         self.cmd = cmd
         self.IMEI = IMEI
-
-        # self.server.login(str(to_addr), str(passwd))
-        self.server = smtplib.SMTP('smtp.gmail.com', 587)
 
     def __del__(self):
         self.quit()
@@ -49,9 +46,8 @@ class Emailer(QThread):
         command = str(cmd_file)
 
         msg = MIMEMultipart()
-        msg['From'] = "msgc.borealis@gmail.com"
-        msg['To'] = "data@sbd.iridium.com"
-        # msg['To'] = "data@sbd.iridium.com"
+        msg['From'] = self.from_addr
+        msg['To'] = self.to_addr
         msg['Subject'] = self.IMEI
         part = MIMEBase('application', "octet-stream")
         part.set_payload(open(command, "rb").read())
@@ -59,16 +55,15 @@ class Emailer(QThread):
         part.add_header('Content-Dispostion',
                         'attachment; filename=%s' % command)
         body = ""
-        msg.attach(MIMEText(body, 'plain'))
+        msg.attach(MIMEText(body, "plain"))
         msg.attach(part)
-
-        self.server.ehlo()
-        self.server.starttls()
-        self.server.ehlo()
-        self.server.login('msgc.borealis', 'FlyHighN0w')
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
+        server.login("msgc.borealis", "FlyHighN0w")
         text = msg.as_string()
-        self.server.sendmail('msgc.borealis@gmail.com',
-                             'data@sbd.iridium.com', text)
+        server.sendmail(self.from_addr, self.to_addr, text)
         if self.cmd == 'cutdown':
             print(self.cmd)
 
@@ -349,7 +344,7 @@ class MainWindow(Ui_MainWindow):
             self.tableWidget.setItem(
                 current_rows, 3, QTableWidgetItem(coords[3]))
             print("%s,%s,%s,%s\n" %
-                               (str(coords[0]), str(coords[1]), str(coords[2]), coords[3]))
+                  (str(coords[0]), str(coords[1]), str(coords[2]), coords[3]))
             self.logfile.write("%s,%s,%s,%s\n" %
                                (str(coords[0]), str(coords[1]), str(coords[2]), coords[3]))
             self.logfile.flush()
