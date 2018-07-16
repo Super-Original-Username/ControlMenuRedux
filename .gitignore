@@ -1,0 +1,4 @@
+.vscode/*
+.idea/*
+tracking\ CSVs/*
+__pycache__/*
