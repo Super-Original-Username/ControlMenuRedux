@@ -37,11 +37,11 @@ class Emailer(QThread):
 
     def run(self):
         if self.cmd == 'cutdown':
-            cmd_file = 'commands/cutdown_cmd.sbd'
+            cmd_file = 'commands/cutdown_100.sbd'
         elif self.cmd == 'open':
-            cmd_file = 'commands/open_cmd.sbd'
+            cmd_file = 'commands/open_010.sbd'
         elif self.cmd == 'close':
-            cmd_file = 'commands/close_cmd.sbd'
+            cmd_file = 'commands/close_001.sbd'
 
         command = str(cmd_file)
 
