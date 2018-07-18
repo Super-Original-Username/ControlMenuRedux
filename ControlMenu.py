@@ -4,6 +4,8 @@ import os
 import time
 
 # PyQt imports
+from email.mime.application import MIMEApplication
+
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -43,20 +45,24 @@ class Emailer(QThread):
         elif self.cmd == 'close':
             cmd_file = 'commands/close_001.sbd'
 
-        command = str(cmd_file)
-
-        msg = MIMEMultipart()
+        msg = MIMEMultipart('alternative')
         msg['From'] = self.from_addr
         msg['To'] = self.to_addr
         msg['Subject'] = self.IMEI
-        part = MIMEBase('application', "octet-stream")
-        part.set_payload(open(command, "rb").read())
-        encoders.encode_base64(part)
-        part.add_header('Content-Dispostion',
-                        'attachment; filename=%s' % command)
-        body = ""
+
+        with open(cmd_file, "rb") as command:
+            msg.attach(MIMEApplication(command.read(),
+                                       Content_Disposition='attachment; filename=%s' % os.path.basename(cmd_file),
+                                       Name=os.path.basename(cmd_file)
+                                       ))
+        # part = MIMEBase('application', "octet-stream")
+        # attach_file = MIMEApplication(open(cmd_file, "rb").read())
+        # encoders.encode_base64(part)
+        # attach_file.add_header('Content-Dispostion',
+                        # 'attachment', filename=os.path.basename(cmd_file))
+        '''body = ""
         msg.attach(MIMEText(body, "plain"))
-        msg.attach(part)
+        msg.attach(attach_file)'''
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.ehlo()
         server.starttls()
