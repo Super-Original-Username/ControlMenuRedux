@@ -1,9 +1,9 @@
-# Imports
+''' Imports '''
 import sys
 import os
 import time
 
-# PyQt imports
+''' PyQt imports '''
 from email.mime.application import MIMEApplication
 
 from PyQt5.QtCore import *
@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import *
 import math
 import MySQLdb
 
-# Email imports
+''' Email imports '''
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
@@ -23,7 +23,8 @@ import smtplib
 from trckGUI import Ui_MainWindow
 
 
-# This function sends command emails to the provided Iridium IMEI
+
+''' This function sends command emails to the provided Iridium IMEI '''
 class Emailer(QThread):
 
     def __init__(self, cmd, IMEI):
@@ -34,13 +35,13 @@ class Emailer(QThread):
         self.cmd = cmd
         self.IMEI = IMEI
 
-    # Closes the thread
+    ''' Closes the thread '''
     def __del__(self):
         self.quit()
         self.wait()
 
-    # Reads in the command sent from the mainwindow thread. Filenames indicate the function that
-    # the arduino should call when the pinstate (last 3 digits in the filename) is read in from the iridium
+    ''' Reads in the command sent from the mainwindow thread. Filenames indicate the function that
+     the arduino should call when the pinstate (last 3 digits in the filename) is read in from the iridium '''
     def run(self):
         if self.cmd == 'cutdown':
             cmd_file = 'commands/cutdown_100.sbd'
@@ -56,7 +57,7 @@ class Emailer(QThread):
         msg['To'] = self.to_addr
         msg['Subject'] = self.IMEI
 
-        # Attaches the command file to an email
+        ''' Attaches the command file to an email '''
         with open(cmd_file, "rb") as command:
             msg.attach(MIMEApplication(command.read(),
                                        Content_Disposition='attachment; filename=%s' % os.path.basename(
@@ -64,7 +65,7 @@ class Emailer(QThread):
                                        Name=os.path.basename(cmd_file)
                                        ))
 
-        # Server login procedure, ends with sending the email to the Iridium address
+        ''' Server login procedure, ends with sending the email to the Iridium address '''
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.ehlo()
         server.starttls()
@@ -77,9 +78,7 @@ class Emailer(QThread):
 
         self.__del__()
 
-# This doesn't actually do much, and will likey be deleted in later revisions
-
-
+''' This doesn't actually do much, and will likey be deleted in later revisions '''
 class Updater(QObject):
     def __init__(self, lat, lon, alt, time, seconds):
         super(Updater, self).__init__()
@@ -104,9 +103,7 @@ class Updater(QObject):
     def get_seconds(self):
         return self.seconds
 
-# This class eliminates any buffering from any stream used as this function's argument
-
-
+''' This class eliminates any buffering from any stream used as this function's argument '''
 class Unbuffered:
 
     def __init__(self, stream):
@@ -122,17 +119,14 @@ class Unbuffered:
     def close(self):
         self.stream.close
 
-# This class handles all tracking for the Iridium modem
-
-
+''' This class handles all tracking for the Iridium modem '''
 class Iridium(QThread):
-    # Signal declarations for sending data between the tracking thread and the mainwindow thread
+    ''' Signal declarations for sending data between the tracking thread and the mainwindow thread '''
     new_coords = pyqtSignal(list)
     no_iridium = pyqtSignal()
 
     def __init__(self, host, user, passwd, name, IMEI):
         super(Iridium, self).__init__()
-        # self.moveToThread(self.main_window.iridium_thread)
         self.c = ''
         self.db = ''
         self.cmd = ''
@@ -143,8 +137,8 @@ class Iridium(QThread):
         self.passwd = passwd
         self.name = name
         self.IMEI = IMEI
-
-    # Kills the thread and sends the idle command to the modem, to reset the pinstate back to 000
+        
+    ''' Kills the thread and sends the idle command to the modem, to reset the pinstate back to 000 '''
     def __del__(self):
         print("Killing tracker")
         self.interrupt()
@@ -152,8 +146,8 @@ class Iridium(QThread):
         self.quit()
         self.wait()
 
-    # Pulls data from a MySQL database currently being hosted by Montana State University,
-    # then sends it back to be logged by the mainwindow thread
+    ''' Pulls data from a MySQL database currently being hosted by Montana State University,
+     then sends it back to be logged by the mainwindow thread '''
     def run(self):
         self.new_loc = ''
         prev = ''
@@ -161,7 +155,8 @@ class Iridium(QThread):
         attempts = 0
         while not connected and not self.iridium_interrupt:
             if attempts < 20:
-                # Database login
+
+                ''' Database login '''
                 try:
                     self.db = MySQLdb.connect(
                         host=self.host, user=self.user, passwd=self.passwd, db=self.name)
@@ -183,7 +178,8 @@ class Iridium(QThread):
                 self.interrupt()
                 self.main_window.no_iridium.emit()
             while connected and not self.iridium_interrupt:
-                # This loop fetches data from our server, then sends it to be logged if it is different from the previously retreived data
+
+                ''' This loop fetches data from our server, then sends it to be logged if it is different from the previously retreived data '''
                 try:
                     self.new_loc = ''
                     try:
@@ -193,7 +189,8 @@ class Iridium(QThread):
                         print(e)
                     if result != prev:
                         prev = result
-                        # This converts the time pulled from the server to something a bit more legible
+
+                        ''' This converts the time pulled from the server to something a bit more legible '''
                         real_time = str(result[3])
                         time = result[3].split(':')
                         hours = int(time[0])
@@ -218,14 +215,10 @@ class Iridium(QThread):
                     else:
                         raise Exception(
                             "ERROR: data is same as last fetch or IMEI is incorrect")
-                        # self.c.close()
-                        # self.c = self.db.cursor()
                 except Exception as e:
                     print(e)
                 if not self.iridium_interrupt:
                     self.sleep(10)
-                # self.c.close()
-                # self.db.close()
         try:
             self.c.close()
             self.db.close()
@@ -297,7 +290,7 @@ class MainWindow(Ui_MainWindow):
         e_thread.start()
         print("sending idle command")
 
-    # Takes the IMEI from the input box in the GUI, feeds it into a tracking thread, and enables the command buttons
+    ''' Takes the IMEI from the input box in the GUI, feeds it into a tracking thread, and enables the command buttons '''
     def start_tracking(self):
         if self.IMEIBox.text() == '':
             self.error.showMessage(
@@ -316,14 +309,15 @@ class MainWindow(Ui_MainWindow):
             self.tableWidget.clear()
             self.tableWidget.setRowCount(0)
             self.trackBtn.setEnabled(False)
-            self.openBtn.setEnabled(True)
-            self.closeBtn.setEnabled(True)
+            # self.openBtn.setEnabled(True) // Will be implemented at a later date
+            # self.closeBtn.setEnabled(True)
             self.cdBtn.setEnabled(True)
             self.idleBtn.setEnabled(True)
             self.stopBtn.setEnabled(True)
             self.IMEI = self.IMEIBox.text()
             self.iridium_tracker = Iridium(
-            self.db_host, self.db_user, self.db_passwd, self.db_name, self.IMEI)
+
+                self.db_host, self.db_user, self.db_passwd, self.db_name, self.IMEI)
             self.iridium_tracker.new_coords.connect(self.update_table)
             self.stopBtn.clicked.connect(self.stop_tracking)
             self.iridium_tracker.start()
@@ -333,7 +327,7 @@ class MainWindow(Ui_MainWindow):
         self.stopBtn.setEnabled(False)
         self.iridium_tracker.__del__()
 
-    # Takes the data sent by the tracking thread, and adds it to both the table and a .csv for archival purposes
+    ''' Takes the data sent by the tracking thread, and adds it to both the table and a .csv for archival purposes '''
     def update_table(self, coords):
         new_data = Updater(coords[0], coords[1],
                            coords[2], coords[3], coords[4])
