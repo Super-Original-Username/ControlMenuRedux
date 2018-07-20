@@ -23,6 +23,7 @@ import smtplib
 from trckGUI import Ui_MainWindow
 
 
+
 ''' This function sends command emails to the provided Iridium IMEI '''
 class Emailer(QThread):
 
@@ -136,7 +137,7 @@ class Iridium(QThread):
         self.passwd = passwd
         self.name = name
         self.IMEI = IMEI
-
+        
     ''' Kills the thread and sends the idle command to the modem, to reset the pinstate back to 000 '''
     def __del__(self):
         print("Killing tracker")
@@ -154,6 +155,7 @@ class Iridium(QThread):
         attempts = 0
         while not connected and not self.iridium_interrupt:
             if attempts < 20:
+
                 ''' Database login '''
                 try:
                     self.db = MySQLdb.connect(
@@ -176,6 +178,7 @@ class Iridium(QThread):
                 self.interrupt()
                 self.main_window.no_iridium.emit()
             while connected and not self.iridium_interrupt:
+
                 ''' This loop fetches data from our server, then sends it to be logged if it is different from the previously retreived data '''
                 try:
                     self.new_loc = ''
@@ -186,6 +189,7 @@ class Iridium(QThread):
                         print(e)
                     if result != prev:
                         prev = result
+
                         ''' This converts the time pulled from the server to something a bit more legible '''
                         real_time = str(result[3])
                         time = result[3].split(':')
@@ -312,6 +316,7 @@ class MainWindow(Ui_MainWindow):
             self.stopBtn.setEnabled(True)
             self.IMEI = self.IMEIBox.text()
             self.iridium_tracker = Iridium(
+
                 self.db_host, self.db_user, self.db_passwd, self.db_name, self.IMEI)
             self.iridium_tracker.new_coords.connect(self.update_table)
             self.stopBtn.clicked.connect(self.stop_tracking)
