@@ -128,6 +128,7 @@ class Unbuffered:
 class Iridium(QThread):
     ''' Signal declarations for sending data between the tracking thread and the mainwindow thread '''
     new_coords = pyqtSignal(list)
+    idle_send = pyqtSignal()
     no_iridium = pyqtSignal()
 
     def __init__(self, host, user, passwd, name, IMEI):
@@ -147,7 +148,7 @@ class Iridium(QThread):
     def __del__(self):
         print("Killing tracker")
         self.interrupt()
-        super.send_idle()
+        self.idle_send.emit()
         self.quit()
         self.wait()
 
@@ -324,6 +325,7 @@ class MainWindow(Ui_MainWindow):
 
                 self.db_host, self.db_user, self.db_passwd, self.db_name, self.IMEI)
             self.iridium_tracker.new_coords.connect(self.update_table)
+            self.iridium_tracker.idle_send.connect(self.send_idle)
             self.stopBtn.clicked.connect(self.stop_tracking)
             self.iridium_tracker.start()
 
