@@ -134,6 +134,7 @@ class Iridium(QThread):
     def __del__(self):
         print("Killing tracker")
         self.interrupt()
+        super.send_idle()
         self.quit()
         self.wait()
 
