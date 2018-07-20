@@ -23,8 +23,8 @@ import smtplib
 from trckGUI import Ui_MainWindow
 
 
-
 ''' This function sends command emails to the provided Iridium IMEI '''
+
 class Emailer(QThread):
 
     def __init__(self, cmd, IMEI):
@@ -36,12 +36,14 @@ class Emailer(QThread):
         self.IMEI = IMEI
 
     ''' Closes the thread '''
+
     def __del__(self):
         self.quit()
         self.wait()
 
     ''' Reads in the command sent from the mainwindow thread. Filenames indicate the function that
      the arduino should call when the pinstate (last 3 digits in the filename) is read in from the iridium '''
+
     def run(self):
         if self.cmd == 'cutdown':
             cmd_file = 'commands/cutdown_100.sbd'
@@ -78,6 +80,7 @@ class Emailer(QThread):
 
         self.__del__()
 
+
 ''' This doesn't actually do much, and will likey be deleted in later revisions '''
 class Updater(QObject):
     def __init__(self, lat, lon, alt, time, seconds):
@@ -103,6 +106,7 @@ class Updater(QObject):
     def get_seconds(self):
         return self.seconds
 
+
 ''' This class eliminates any buffering from any stream used as this function's argument '''
 class Unbuffered:
 
@@ -118,6 +122,7 @@ class Unbuffered:
 
     def close(self):
         self.stream.close
+
 
 ''' This class handles all tracking for the Iridium modem '''
 class Iridium(QThread):
@@ -137,7 +142,7 @@ class Iridium(QThread):
         self.passwd = passwd
         self.name = name
         self.IMEI = IMEI
-        
+
     ''' Kills the thread and sends the idle command to the modem, to reset the pinstate back to 000 '''
     def __del__(self):
         print("Killing tracker")
