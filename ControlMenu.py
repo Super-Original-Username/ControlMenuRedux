@@ -44,6 +44,8 @@ class Emailer(QThread):
             cmd_file = 'commands/open_010.sbd'
         elif self.cmd == 'close':
             cmd_file = 'commands/close_001.sbd'
+        elif self.cmd == 'idle':
+            cmd_file = 'commands/idle_000.sbd'
 
         msg = MIMEMultipart('alternative')
         msg['From'] = self.from_addr
@@ -55,14 +57,7 @@ class Emailer(QThread):
                                        Content_Disposition='attachment; filename=%s' % os.path.basename(cmd_file),
                                        Name=os.path.basename(cmd_file)
                                        ))
-        # part = MIMEBase('application', "octet-stream")
-        # attach_file = MIMEApplication(open(cmd_file, "rb").read())
-        # encoders.encode_base64(part)
-        # attach_file.add_header('Content-Dispostion',
-                        # 'attachment', filename=os.path.basename(cmd_file))
-        '''body = ""
-        msg.attach(MIMEText(body, "plain"))
-        msg.attach(attach_file)'''
+        
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.ehlo()
         server.starttls()
