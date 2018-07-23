@@ -24,7 +24,6 @@ from trckGUI import Ui_MainWindow
 
 
 ''' This function sends command emails to the provided Iridium IMEI '''
-
 class Emailer(QThread):
 
     def __init__(self, cmd, IMEI):
@@ -35,14 +34,14 @@ class Emailer(QThread):
         self.cmd = cmd
         self.IMEI = IMEI
 
-    ''' Closes the thread '''
+    # Closes the thread
 
     def __del__(self):
         self.quit()
         self.wait()
 
-    ''' Reads in the command sent from the mainwindow thread. Filenames indicate the function that
-     the arduino should call when the pinstate (last 3 digits in the filename) is read in from the iridium '''
+    # Reads in the command sent from the mainwindow thread. Filenames indicate the function that
+    # the arduino should call when the pinstate (last 3 digits in the filename) is read in from the iridium
 
     def run(self):
         if self.cmd == 'cutdown':
@@ -81,7 +80,7 @@ class Emailer(QThread):
         self.__del__()
 
 
-''' This doesn't actually do much, and will likey be deleted in later revisions '''
+''' This really doesn't need to be here, but it makes tracking ever so slightly easier '''
 class Updater(QObject):
     def __init__(self, lat, lon, alt, time, seconds):
         super(Updater, self).__init__()
@@ -126,7 +125,7 @@ class Unbuffered:
 
 ''' This class handles all tracking for the Iridium modem '''
 class Iridium(QThread):
-    ''' Signal declarations for sending data between the tracking thread and the mainwindow thread '''
+    # Signal declarations for sending data between the tracking thread and the mainwindow thread
     new_coords = pyqtSignal(list)
     idle_send = pyqtSignal()
     no_iridium = pyqtSignal()
@@ -144,7 +143,7 @@ class Iridium(QThread):
         self.name = name
         self.IMEI = IMEI
 
-    ''' Kills the thread and sends the idle command to the modem, to reset the pinstate back to 000 '''
+    # Kills the thread and sends the idle command to the modem, to reset the pinstate back to 000
     def __del__(self):
         print("Killing tracker")
         self.interrupt()
@@ -152,8 +151,8 @@ class Iridium(QThread):
         self.quit()
         self.wait()
 
-    ''' Pulls data from a MySQL database currently being hosted by Montana State University,
-     then sends it back to be logged by the mainwindow thread '''
+    # Pulls data from a MySQL database currently being hosted by Montana State University,
+    # then sends it back to be logged by the mainwindow thread
     def run(self):
         self.new_loc = ''
         prev = ''
@@ -162,7 +161,7 @@ class Iridium(QThread):
         while not connected and not self.iridium_interrupt:
             if attempts < 20:
 
-                ''' Database login '''
+                # Database login
                 try:
                     self.db = MySQLdb.connect(
                         host=self.host, user=self.user, passwd=self.passwd, db=self.name)
@@ -185,7 +184,7 @@ class Iridium(QThread):
                 self.main_window.no_iridium.emit()
             while connected and not self.iridium_interrupt:
 
-                ''' This loop fetches data from our server, then sends it to be logged if it is different from the previously retreived data '''
+                # This loop fetches data from our server, then sends it to be logged if it is different from the previously retreived data
                 try:
                     self.new_loc = ''
                     try:
@@ -196,7 +195,7 @@ class Iridium(QThread):
                     if result != prev:
                         prev = result
 
-                        ''' This converts the time pulled from the server to something a bit more legible '''
+                        # This converts the time pulled from the server to something a bit more legible
                         real_time = str(result[3])
                         time = result[3].split(':')
                         hours = int(time[0])
@@ -296,7 +295,7 @@ class MainWindow(Ui_MainWindow):
         e_thread.start()
         print("sending idle command")
 
-    ''' Takes the IMEI from the input box in the GUI, feeds it into a tracking thread, and enables the command buttons '''
+    # Takes the IMEI from the input box in the GUI, feeds it into a tracking thread, and enables the command buttons
     def start_tracking(self):
         if self.IMEIBox.text() == '':
             self.error.showMessage(
@@ -334,7 +333,7 @@ class MainWindow(Ui_MainWindow):
         self.stopBtn.setEnabled(False)
         self.iridium_tracker.__del__()
 
-    ''' Takes the data sent by the tracking thread, and adds it to both the table and a .csv for archival purposes '''
+    # Takes the data sent by the tracking thread, and adds it to both the table and a .csv for archival purposes
     def update_table(self, coords):
         new_data = Updater(coords[0], coords[1],
                            coords[2], coords[3], coords[4])
