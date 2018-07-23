@@ -146,7 +146,6 @@ class Iridium(QThread):
     # Kills the thread and sends the idle command to the modem, to reset the pinstate back to 000
     def __del__(self):
         print("Killing tracker")
-        self.interrupt()
         self.idle_send.emit()
         self.quit()
         self.wait()
@@ -184,7 +183,8 @@ class Iridium(QThread):
                 self.main_window.no_iridium.emit()
             while connected and not self.iridium_interrupt:
 
-                # This loop fetches data from our server, then sends it to be logged if it is different from the previously retreived data
+                # This loop fetches data from our server, then sends it to be logged if it is different from the
+                # previously retreived data
                 try:
                     self.new_loc = ''
                     try:
@@ -217,13 +217,13 @@ class Iridium(QThread):
                                 self.new_coords.emit(self.new_loc)
                         except Exception as e:
                             print(e)
-                    else:
+                    '''else:
                         raise Exception(
-                            "ERROR: data is same as last fetch or IMEI is incorrect")
+                            "ERROR: data is same as last fetch or IMEI is incorrect")'''
                 except Exception as e:
                     print(e)
-                if not self.iridium_interrupt:
-                    self.sleep(10)
+                '''if not self.iridium_interrupt:
+                    self.sleep(5)'''
         try:
             self.c.close()
             self.db.close()
@@ -331,6 +331,7 @@ class MainWindow(Ui_MainWindow):
     def stop_tracking(self):
         self.trackBtn.setEnabled(True)
         self.stopBtn.setEnabled(False)
+        self.iridium_tracker.interrupt()
         self.iridium_tracker.__del__()
 
     # Takes the data sent by the tracking thread, and adds it to both the table and a .csv for archival purposes
