@@ -28,7 +28,7 @@ class Emailer(QThread):
 
     def __init__(self, cmd, IMEI):
         super(Emailer, self).__init__()
-        self.from_addr = 'msgc.borealis@gmail.com'
+        self.from_addr = 'umt.borealis@gmail.com'
         self.to_addr = 'data@sbd.iridium.com'
         self.passwd = 'FlyHighN0w'
         self.cmd = cmd
@@ -67,15 +67,19 @@ class Emailer(QThread):
                                        ))
 
         ''' Server login procedure, ends with sending the email to the Iridium address '''
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.ehlo()
-        server.starttls()
-        server.ehlo()
-        server.login("msgc.borealis", "FlyHighN0w")
-        text = msg.as_string()
-        server.sendmail(self.from_addr, self.to_addr, text)
-        if self.cmd == 'cutdown':
-            print(self.cmd)
+        try:
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login("umt.borealis", "FlyHighN0w")
+            text = msg.as_string()
+            server.sendmail(self.from_addr, self.to_addr, text)
+            if self.cmd == 'cutdown':
+                print(self.cmd)
+        except Exception as e:
+            print(e)
+            print("could not login to smtp server, send code manually")
 
         self.__del__()
 
