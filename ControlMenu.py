@@ -28,9 +28,9 @@ class Emailer(QThread):
 
     def __init__(self, cmd, IMEI):
         super(Emailer, self).__init__()
-        self.from_addr = 'umt.borealis@gmail.com'
+        self.from_addr = 'umt.borealis@gmail.com' # If login fails, change this line
         self.to_addr = 'data@sbd.iridium.com'
-        self.passwd = 'FlyHighN0w'
+        self.passwd = 'FlyHighN0w'                # and this line for your alternate account
         self.cmd = cmd
         self.IMEI = IMEI
 
@@ -68,11 +68,11 @@ class Emailer(QThread):
 
         ''' Server login procedure, ends with sending the email to the Iridium address '''
         try:
-            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server = smtplib.SMTP('smtp.gmail.com', 587) # Can be changed to another server/port, but not reccommended
             server.ehlo()
             server.starttls()
             server.ehlo()
-            server.login("umt.borealis", "FlyHighN0w")
+            server.login("umt.borealis", "FlyHighN0w") # Be sure to change these too if you need to use a differrent gmail
             text = msg.as_string()
             server.sendmail(self.from_addr, self.to_addr, text)
             if self.cmd == 'cutdown':
@@ -84,7 +84,7 @@ class Emailer(QThread):
         self.__del__()
 
 
-''' This really doesn't need to be here, but it makes tracking ever so slightly easier '''
+''' This really doesn't need to be here, but it makes tracking ever so slightly easier. Hopefully all functions are self-explanatory '''
 class Updater(QObject):
     def __init__(self, lat, lon, alt, time, seconds):
         super(Updater, self).__init__()
@@ -340,18 +340,18 @@ class MainWindow(Ui_MainWindow):
 
     # Takes the data sent by the tracking thread, and adds it to both the table and a .csv for archival purposes
     def update_table(self, coords):
-        new_data = Updater(coords[0], coords[1],
+        new_data = Updater(coords[0], coords[1],    # Basically just puts data into a struct for easy retrieval
                            coords[2], coords[3], coords[4])
         if new_data.get_lat() == 0.0 or new_data.get_lon() == 0.0 or new_data.get_alt() == 0.0:
             return
 
-        if new_data.get_seconds() < self.current.get_seconds():
+        if new_data.get_seconds() < self.current.get_seconds(): # Makes sure the data fed in is newer than the last set
             return
 
         for item in coords:
             print(item)
 
-        try:
+        try: # Attempts to add the newly retrieved information to the table and a .csv for archival purposes
             current_rows = self.tableWidget.rowCount()
             self.tableWidget.insertRow(current_rows)
             self.tableWidget.setItem(
@@ -374,7 +374,7 @@ class MainWindow(Ui_MainWindow):
         QApplication.processEvents()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # You know what this does
     app = QApplication(sys.argv)
     form = QMainWindow()
     m_gui = MainWindow(form)
@@ -383,7 +383,7 @@ if __name__ == '__main__':
 
     sys._excepthook = sys.excepthook
 
-    def exception_hook(exctype, value, traceback):
+    def exception_hook(exctype, value, traceback): # Catches exceptions that QT likes to hide
         print(exctype, value, traceback)
         sys._excepthook(exctype, value, traceback)
         sys.exit(1)

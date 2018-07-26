@@ -10,5 +10,7 @@ and commands for other features to be implemented at a later date
 <li>mysqlclient</li>
 </ul>
 
+Note: You may need to use another gmail address if the program has trouble logging in. There have been issues in the past with 2fA when our accounts get used from too many machines
+
 
 
